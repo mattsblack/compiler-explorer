@@ -536,17 +536,6 @@ const definitions: Record<LanguageKey, LanguageDefinition> = {
         monacoDisassembly: null,
         digitSeparator: '_',
     },
-    groovy: {
-        name: 'Groovy',
-        monaco: 'groovy',
-        extensions: ['.groovy'],
-        alias: [],
-        logoFilename: 'groovy.svg',
-        logoFilenameDark: null,
-        formatter: null,
-        previewFilter: null,
-        monacoDisassembly: null,
-    },
     haskell: {
         name: 'Haskell',
         monaco: 'haskell',

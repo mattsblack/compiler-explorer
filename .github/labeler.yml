@@ -196,13 +196,6 @@
           - 'etc/config/gleam.*.properties'
           - 'static/modes/gleam-mode.ts'
 
-'lang-groovy':
-  - changed-files:
-      - any-glob-to-any-file:
-          - 'lib/compilers/groovy.ts'
-          - 'etc/config/groovy.*.properties'
-          - 'static/modes/groovy-mode.ts'
-
 'lang-hlsl':
   - changed-files:
       - any-glob-to-any-file:
