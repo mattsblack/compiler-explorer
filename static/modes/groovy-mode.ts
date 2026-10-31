@@ -160,7 +160,8 @@ function definition(): monaco.languages.IMonarchLanguage {
         tokenizer: {
             root: [
                 [/^#!.*$/, 'comment'],
-                [/[a-zA-Z_$][\w$]*(?=\s*:(?!:))/, 'key'],
+                [/@[a-zA-Z_$][\w$]*/, 'annotation'],
+                [/[a-zA-Z_$][\w$]*(?=\s*:(?!:))/, {cases: {'@keywords': 'keyword', '@default': 'key'}}],
                 [/[A-Z][\w$]*/, {cases: {'@typeKeywords': 'keyword', '@default': 'type.identifier'}}],
                 [
                     /[a-z_$][\w$]*/,
@@ -176,7 +177,6 @@ function definition(): monaco.languages.IMonarchLanguage {
                 {include: '@whitespace'},
                 [/[{}()[\]]/, '@brackets'],
                 [/@symbols/, {cases: {'@operators': 'operator', '@default': ''}}],
-                [/@[a-zA-Z_$][\w$]*/, 'annotation'],
 
                 [/\d*\.\d+([eE][-+]?\d+)?[fFdDgG]?/, 'number.float'],
                 [/0[xX][0-9a-fA-F_]+[lLiIgG]?/, 'number.hex'],
