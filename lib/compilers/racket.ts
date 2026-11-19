@@ -1,4 +1,4 @@
-// Copyright (c) 2022, Compiler Explorer Authors
+// Copyright (c) 2026, Compiler Explorer Authors
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -44,6 +44,7 @@ import {RacketPassDumpParser} from '../parsers/racket-pass-dump-parser.js';
 
 export class RacketCompiler extends BaseCompiler {
     private raco: string;
+    private bcDisassemble: boolean;
     private passDumpParser: RacketPassDumpParser;
 
     static get key() {
@@ -71,6 +72,7 @@ export class RacketCompiler extends BaseCompiler {
         }
         this.raco = this.compilerProps<string>(`compiler.${this.compiler.id}.raco`);
         this.passDumpParser = new RacketPassDumpParser(this.compilerProps);
+        this.bcDisassemble = this.compilerProps<boolean>(`compiler.${this.compiler.id}.bcDisassemble`, false);
     }
 
     override optionsForFilter(
@@ -161,6 +163,35 @@ export class RacketCompiler extends BaseCompiler {
             maxOutput: maxSize,
             customCwd: (result.dirPath as string) || path.dirname(outputFilename),
         };
+
+        if (this.bcDisassemble) {
+            const sourceFile = path.join(execOptions.customCwd!, this.compileFilename);
+            const helper = [
+                '(require disassemble)',
+                `(define mod (string->path ${JSON.stringify(sourceFile)}))`,
+                '(define-values (vars stxs) (module->exports mod))',
+                '(for* ([phase-exports (in-list vars)]',
+                '       #:when (equal? (car phase-exports) 0)',
+                '       [sym-entry (in-list (cdr phase-exports))])',
+                '  (define sym (car sym-entry))',
+                '  (define val (dynamic-require mod sym))',
+                '  (when (procedure? val)',
+                '    (printf "; === ~a ===\\n" sym)',
+                '    (disassemble val)',
+                '    (newline)))',
+            ].join('\n');
+
+            const disasmResult = await this.exec(this.compiler.exe, ['-e', helper], execOptions);
+
+            if (disasmResult.code) {
+                logger.error('Error disassembling via Racket BC `disassemble`', disasmResult);
+                result.asm = `<No output: Racket BC disassemble returned ${disasmResult.code}>\n${disasmResult.stderr}`;
+            } else {
+                result.asm = this.postProcessObjdumpOutput(disasmResult.stdout);
+            }
+            result.objdumpTime = disasmResult.execTime;
+            return result;
+        }
         const decompileResult = await this.exec(this.raco, ['decompile', outputFilename], execOptions);
 
         if (decompileResult.code) {
